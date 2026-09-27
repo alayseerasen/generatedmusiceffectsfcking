@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AMBIENT//BLUR</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+    background:
+        radial-gradient(circle at 20% 10%, #392050 0, transparent 35%),
+        radial-gradient(circle at 90% 80%, #182c42 0, transparent 35%),
+        #090710;
+    color: #eee8ff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    padding: 25px;
+}
+
+.app {
+    width: min(1100px, 100%);
+    margin: auto;
+}
+
+header {
+    padding: 25px 0 20px;
+}
+
+.logo {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -2px;
+}
+
+.logo span {
+    opacity: .35;
+}
+
+.subtitle {
+    margin-top: 7px;
+    color: #9d91b8;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+.panel {
+    background: rgba(20, 15, 31, .8);
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 15px;
+    backdrop-filter: blur(20px);
+}
+
+.drop {
+    border: 1px dashed rgba(210,190,255,.3);
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.drop:hover,
+.drop.drag {
+    border-color: #d4aaff;
+    background: rgba(130,80,180,.08);
+}
+
+.drop-title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.drop-sub {
+    color: #827890;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+input[type=file] {
+    display: none;
+}
+
+.file-name {
+    color: #cdaeff;
+    margin-top: 15px;
+    font-size: 13px;
+    text-align: center;
+    word-break: break-all;
+}
+
+.wave {
+    width: 100%;
+    height: 130px;
+    border-radius: 12px;
+    background: #0b0910;
+    display: block;
+}
+
+.controls {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+@media(max-width:700px) {
+    .controls {
+        grid-template-columns: 1fr;
+    }
+}
+
+.control {
+    background: rgba(255,255,255,.025);
+    padding: 14px;
+    border-radius: 13px;
+}
+
+.control-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+label {
+    font-size: 12px;
+    color: #b9afca;
+}
+
+.value {
+    color: #e4c8ff;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+input[type=range] {
+    width: 100%;
+    accent-color: #c48bff;
+}
+
+.presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+button {
+    border: 0;
+    color: #eee;
+    background: #241b30;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 9px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 11px;
+    letter-spacing: .5px;
+}
+
+button:hover {
+    background: #342443;
+}
+
+button.primary {
+    background: #b678ed;
+    color: #160c1e;
+    border-color: #c992ff;
+}
+
+button.primary:hover {
+    background: #ce9aff;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.status {
+    font-family: monospace;
+    font-size: 11px;
+    color: #8e839d;
+    min-height: 16px;
+    margin-top: 10px;
+}
+
+.small {
+    font-size: 10px;
+    color: #70677b;
+    line-height: 1.5;
+}
+
+h2 {
+    font-size: 13px;
+    letter-spacing: 1px;
+    margin-top: 0;
+    color: #b8a8ca;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+    <div class="logo">AMBIENT<span>//</span>BLUR</div>
+    <div class="subtitle">
+        TURN ANY AUDIO INTO SOMETHING UNRECOGNIZABLE
+    </div>
+</header>
+
+<div class="panel">
+
+    <label class="drop" id="drop">
+        <div class="drop-title">DROP AUDIO HERE</div>
+        <div class="drop-sub">MP3 / WAV / M4A / OGG / FLAC*</div>
+        <div class="file-name" id="fileName">no file selected</div>
+        <input type="file" id="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.aiff,.caf,audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/x-wav,audio/ogg,audio/flac,audio/aac,audio/aiff,audio/x-aiff">
+    </label>
+
+</div>
+
+<div class="panel">
+
+    <h2>PRESETS</h2>
+
+    <div class="presets">
+        <button data-preset="ambient">AMBIENT BLUR</button>
+        <button data-preset="dream">DREAM</button>
+        <button data-preset="underwater">UNDERWATER</button>
+        <button data-preset="void">VOID</button>
+        <button data-preset="destroy">DESTROY</button>
+        <button data-preset="ethereal">ETHEREAL</button>
+        <button data-preset="ghost">VOCAL GHOST</button>
+        <button data-preset="frozen">FROZEN VOCAL</button>
+        <button data-preset="digitalrain">DIGITAL RAIN</button>
+        <button data-preset="reset">RESET</button>
+    </div>
+
+</div>
+
+<div class="panel">
+
+    <h2>TRANSFORMATION</h2>
+
+    <div class="controls">
+
+        <div class="control">
+            <div class="control-top">
+                <label>BLUR</label>
+                <span class="value" id="blurVal">70%</span>
+            </div>
+            <input id="blur" type="range" min="0" max="100" value="70">
+        </div>
+
+        <div class="control">
+            <div class="control-top">
+                <label>TIME STRETCH</label>
+                <span class="value" id="stretchVal">4.0×</span>
+            </div>
+            <input id="stretch" type="range" min="1" max="8" step=".1" value="4">
+        </div>
+
+        <div class="control">
+            <div class="control-top">
+                <label>PITCH</label>
+                <span class="value" id="pitchVal">-5 st</span>
+            </div>
+            <input id="pitch" type="range" min="-24" max="24" value="-5">
+        </div>
+
+        <div class="control">
+            <div class="control-top">
+                <label>REVERSE</label>
+                <span class="value" id="reverseVal">35%</span>
+            </div>
+            <input id="reverse" type="range" min="0" max="100" value="35">
+        </div>
+
+        <div class="control">
+            <div class="control-top">
+                <label>REVERB</label>
+                <span class="value" id="reverbVal">90%</span>
+            </div>
+            <input id="reverb" type="range" min="0" max="100" value="90">
+        </div>
+
+        <div class="control">
+            <div class="control-top">
+                <label>DELAY</label>
+                <span class="value" id="delayVal">70%</span>
+            </div>
+            <input id="delay" type="range" min="0" max="100" value="70">
+        </div>
+
+        <div class="control">
+            <div class="control-top">
+                <label>STEREO WIDTH</label>
+                <span class="value" id="stereoVal">85%</span>
+            </div>
+            <input id="stereo" type="range" min="0" max="100" value="85">
+        </div>
+
+        <div class="control">
+            <div class="control-top">
+                <label>DISTORTION</label>
+                <span class="value" id="distVal">8%</span>
+            </div>
+            <input id="dist" type="range" min="0" max="100" value="8">
+        </div>
+
+        <div class="control">
+            <div class="control-top">
+                <label>LOWPASS</label>
+                <span class="value" id="lowpassVal">4200 Hz</span>
+            </div>
+            <input id="lowpass" type="range" min="300" max="18000" value="4200">
+        </div>
+
+        <div class="control">
+            <div class="control-top">
+                <label>TEXTURE</label>
+                <span class="value" id="textureVal">75%</span>
+            </div>
+            <input id="texture" type="range" min="0" max="100" value="75">
+        </div>
+
+    </div>
+</div>
+
+<div class="panel">
+    <h2>GRANULAR ENGINE</h2>
+    <div class="controls">
+        <div class="control">
+            <div class="control-top"><label>GRAIN SIZE</label><span class="value" id="grainSizeVal">60 ms</span></div>
+            <input id="grainSize" type="range" min="15" max="300" value="60">
+        </div>
+        <div class="control">
+            <div class="control-top"><label>GRAIN DENSITY</label><span class="value" id="grainDensityVal">50%</span></div>
+            <input id="grainDensity" type="range" min="5" max="100" value="50">
+        </div>
+        <div class="control">
+            <div class="control-top"><label>GRAIN POSITION JITTER</label><span class="value" id="grainJitterVal">40%</span></div>
+            <input id="grainJitter" type="range" min="0" max="100" value="40">
+        </div>
+        <div class="control">
+            <div class="control-top"><label>GRAIN PITCH RANDOMNESS</label><span class="value" id="grainPitchRandVal">15%</span></div>
+            <input id="grainPitchRand" type="range" min="0" max="100" value="15">
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>SMEAR</h2>
+    <div class="controls">
+        <div class="control">
+            <div class="control-top"><label>SMEAR AMOUNT</label><span class="value" id="smearVal">0%</span></div>
+            <input id="smear" type="range" min="0" max="100" value="0">
+        </div>
+        <div class="control">
+            <div class="control-top"><label>SMEAR DENSITY</label><span class="value" id="smearDensityVal">50%</span></div>
+            <input id="smearDensity" type="range" min="10" max="100" value="50">
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>PITCH LAYERS</h2>
+    <div class="controls">
+        <div class="control">
+            <div class="control-top"><label>LAYER COUNT</label><span class="value" id="pitchLayersVal">1</span></div>
+            <input id="pitchLayers" type="range" min="1" max="5" value="1">
+        </div>
+        <div class="control">
+            <div class="control-top"><label>LAYER SPREAD</label><span class="value" id="pitchSpreadVal">7 st</span></div>
+            <input id="pitchSpread" type="range" min="1" max="12" value="7">
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>FREEZE</h2>
+    <div class="controls">
+        <div class="control">
+            <div class="control-top"><label>FREEZE POSITION</label><span class="value" id="freezePosVal">30%</span></div>
+            <input id="freezePos" type="range" min="0" max="100" value="30">
+        </div>
+        <div class="control">
+            <div class="control-top"><label>FREEZE LENGTH</label><span class="value" id="freezeLenVal">12 s</span></div>
+            <input id="freezeLen" type="range" min="4" max="40" value="12">
+        </div>
+    </div>
+    <div class="actions" style="margin-top:12px;">
+        <button id="freezeToggle">FREEZE: OFF</button>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>MUTATE</h2>
+    <div class="controls">
+        <div class="control" style="grid-column:1/-1;">
+            <div class="control-top"><label>MUTATION AMOUNT</label><span class="value" id="mutateAmtVal">35%</span></div>
+            <input id="mutateAmt" type="range" min="5" max="100" value="35">
+        </div>
+    </div>
+    <div class="actions" style="margin-top:12px;">
+        <button class="primary" id="mutateBtn">MUTATE</button>
+    </div>
+</div>
+
+<div class="panel">
+
+    <canvas class="wave" id="wave"></canvas>
+
+    <div class="actions" style="margin-top:15px;">
+        <button class="primary" id="generate">GENERATE AMBIENT</button>
+        <button id="playOriginal">PLAY ORIGINAL</button>
+        <button id="playResult">PLAY RESULT</button>
+        <button id="stop">STOP</button>
+        <button id="download" disabled>DOWNLOAD WAV</button>
+    </div>
+
+    <div class="status" id="status">
+        waiting for audio...
+    </div>
+
+    <div class="small">
+        * Возможность декодирования зависит от браузера. WAV/MP3 работают наиболее надёжно.
+        Обработка выполняется локально — файл никуда не загружается.
+    </div>
+
+</div>
+
+</div>
+
+<script>
+
+let audioCtx = null;
+let originalBuffer = null;
+let resultBuffer = null;
+let currentSource = null;
+
+const $ = id => document.getElementById(id);
+
+const fileInput = $("file");
+const drop = $("drop");
+const fileName = $("fileName");
+const canvas = $("wave");
+const ctxCanvas = canvas.getContext("2d");
+
+const params = {
+    blur: 70,
+    stretch: 4,
+    pitch: -5,
+    reverse: 35,
+    reverb: 90,
+    delay: 70,
+    stereo: 85,
+    dist: 8,
+    lowpass: 4200,
+    texture: 75,
+    grainSize: 60,
+    grainDensity: 50,
+    grainJitter: 40,
+    grainPitchRand: 15,
+    smear: 0,
+    smearDensity: 50,
+    pitchLayers: 1,
+    pitchSpread: 7,
+    freezePos: 30,
+    freezeLen: 12,
+    mutateAmt: 35
+};
+
+let freezeOn = false;
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new AudioContext();
+    }
+}
+
+function updateLabels() {
+    $("blurVal").textContent = params.blur + "%";
+    $("stretchVal").textContent = params.stretch.toFixed(1) + "×";
+    $("pitchVal").textContent = params.pitch + " st";
+    $("reverseVal").textContent = params.reverse + "%";
+    $("reverbVal").textContent = params.reverb + "%";
+    $("delayVal").textContent = params.delay + "%";
+    $("stereoVal").textContent = params.stereo + "%";
+    $("distVal").textContent = params.dist + "%";
+    $("lowpassVal").textContent = params.lowpass + " Hz";
+    $("textureVal").textContent = params.texture + "%";
+    $("grainSizeVal").textContent = params.grainSize + " ms";
+    $("grainDensityVal").textContent = params.grainDensity + "%";
+    $("grainJitterVal").textContent = params.grainJitter + "%";
+    $("grainPitchRandVal").textContent = params.grainPitchRand + "%";
+    $("smearVal").textContent = params.smear + "%";
+    $("smearDensityVal").textContent = params.smearDensity + "%";
+    $("pitchLayersVal").textContent = params.pitchLayers;
+    $("pitchSpreadVal").textContent = params.pitchSpread + " st";
+    $("freezePosVal").textContent = params.freezePos + "%";
+    $("freezeLenVal").textContent = params.freezeLen + " s";
+    $("mutateAmtVal").textContent = params.mutateAmt + "%";
+}
+
+[
+    "blur",
+    "stretch",
+    "pitch",
+    "reverse",
+    "reverb",
+    "delay",
+    "stereo",
+    "dist",
+    "lowpass",
+    "texture",
+    "grainSize",
+    "grainDensity",
+    "grainJitter",
+    "grainPitchRand",
+    "smear",
+    "smearDensity",
+    "pitchLayers",
+    "pitchSpread",
+    "freezePos",
+    "freezeLen",
+    "mutateAmt"
+].forEach(id => {
+
+    $(id).addEventListener("input", e => {
+        params[id] = Number(e.target.value);
+        updateLabels();
+    });
+
+});
+
+updateLabels();
+
+
+/* FILE */
+
+fileInput.addEventListener("change", e => {
+
+    if (e.target.files[0]) {
+        loadFile(e.target.files[0]);
+    }
+
+});
+
+drop.addEventListener("click", () => fileInput.click());
+
+drop.addEventListener("dragover", e => {
+    e.preventDefault();
+    drop.classList.add("drag");
+});
+
+drop.addEventListener("dragleave", () => {
+    drop.classList.remove("drag");
+});
+
+drop.addEventListener("drop", e => {
+
+    e.preventDefault();
+    drop.classList.remove("drag");
+
+    const file = e.dataTransfer.files[0];
+
+    if (file) loadFile(file);
+
+});
+
+
+async function loadFile(file) {
+
+    try {
+
+        initAudio();
+
+        $("status").textContent = "decoding audio...";
+
+        const arrayBuffer = await file.arrayBuffer();
+
+        originalBuffer =
+            await audioCtx.decodeAudioData(arrayBuffer);
+
+        fileName.textContent =
+            file.name +
+            " — " +
+            Math.round(originalBuffer.duration) +
+            " sec";
+
+        drawWave(originalBuffer);
+
+        $("status").textContent =
+            "audio loaded — ready to transform";
+
+        resultBuffer = null;
+        $("download").disabled = true;
+
+    } catch (e) {
+
+        console.error(e);
+
+        $("status").textContent =
+            "could not decode this audio file";
+
+    }
+
+}
+
+
+/* WAVEFORM */
+
+function drawWave(buffer) {
+
+    const w = canvas.width = canvas.clientWidth * devicePixelRatio;
+    const h = canvas.height = canvas.clientHeight * devicePixelRatio;
+
+    ctxCanvas.clearRect(0,0,w,h);
+
+    const data = buffer.getChannelData(0);
+
+    const step = Math.ceil(data.length / w);
+
+    ctxCanvas.beginPath();
+
+    for (let x = 0; x < w; x++) {
+
+        let min = 1;
+        let max = -1;
+
+        const start = x * step;
+        const end = Math.min(start + step, data.length);
+
+        for (let i = start; i < end; i++) {
+
+            const v = data[i];
+
+            if (v < min) min = v;
+            if (v > max) max = v;
+
+        }
+
+        const y1 = (1 + min) * h / 2;
+        const y2 = (1 + max) * h / 2;
+
+        ctxCanvas.moveTo(x, y1);
+        ctxCanvas.lineTo(x, y2);
+
+    }
+
+    ctxCanvas.strokeStyle = "#b678ed";
+    ctxCanvas.globalAlpha = .8;
+    ctxCanvas.stroke();
+
+}
+
+
+/*
+    IMPULSE RESPONSE
+    synthetic gigantic reverb
+*/
+
+function createImpulse(context, seconds, decay) {
+
+    const length =
+        Math.floor(context.sampleRate * seconds);
+
+    const impulse =
+        context.createBuffer(
+            2,
+            length,
+            context.sampleRate
+        );
+
+    for (let ch = 0; ch < 2; ch++) {
+
+        const data =
+            impulse.getChannelData(ch);
+
+        for (let i = 0; i < length; i++) {
+
+            const t = i / length;
+
+            data[i] =
+                (Math.random() * 2 - 1) *
+                Math.pow(1 - t, decay);
+
+        }
+
+    }
+
+    return impulse;
+}
+
+
+/*
+    distortion curve
+*/
+
+function makeDistortionCurve(amount) {
+
+    const n = 44100;
+    const curve = new Float32Array(n);
+
+    const k = amount * 80 + 1;
+
+    for (let i = 0; i < n; i++) {
+
+        const x = i * 2 / n - 1;
+
+        curve[i] =
+            ((3 + k) * x * 20 * Math.PI / 180) /
+            (Math.PI + k * Math.abs(x));
+
+    }
+
+    return curve;
+}
+
+
+/*
+    CREATE STRETCHED BUFFER
+
+    This is deliberately destructive:
+    every small grain is placed much slower than
+    the original and overlaps with neighboring grains.
+*/
+
+function createGrainLayer(
+    context,
+    sourceBuffer,
+    stretch,
+    pitchSemitones,
+    reverseAmount,
+    textureAmount,
+    grainSizeMs,
+    densityPct,
+    jitterPct,
+    pitchRandPct
+) {
+
+    const duration =
+        sourceBuffer.duration * stretch;
+
+    const output =
+        context.createBuffer(
+            sourceBuffer.numberOfChannels,
+            Math.ceil(duration * context.sampleRate),
+            context.sampleRate
+        );
+
+    const channels = sourceBuffer.numberOfChannels;
+
+    const grainSize =
+        grainSizeMs != null
+        ? Math.max(.01, grainSizeMs / 1000)
+        : Math.max(.035, .16 - textureAmount * .0008);
+
+    const density = densityPct != null ? densityPct : (18 + textureAmount * .2);
+    const jitter = (jitterPct != null ? jitterPct : 40) / 100;
+    const pitchRand = (pitchRandPct != null ? pitchRandPct : 0) / 100;
+
+    const hop =
+        grainSize * Math.max(.06, 1 - density / 100 * .85);
+
+    const ratio =
+        Math.pow(2, pitchSemitones / 12);
+
+    const input =
+        [];
+
+    for (let ch = 0; ch < channels; ch++) {
+        input[ch] = sourceBuffer.getChannelData(ch);
+    }
+
+    const outputChannels = [];
+
+    for (let ch = 0; ch < channels; ch++) {
+        outputChannels[ch] =
+            output.getChannelData(ch);
+    }
+
+    let position = 0;
+
+    /*
+        pseudo-random walk through source.
+        This makes the resulting texture less
+        recognizable than a simple time stretch.
+    */
+
+    let sourcePosition =
+        Math.floor(
+            Math.random() * sourceBuffer.length
+        );
+
+    while (
+        position <
+        output.length - grainSize * output.sampleRate
+    ) {
+
+        let sourceStart =
+            sourcePosition;
+
+        const grainSamples =
+            Math.floor(
+                grainSize * sourceBuffer.sampleRate
+            );
+
+        const grainRatio =
+            ratio * (1 + (Math.random() * 2 - 1) * pitchRand * .6);
+
+        const outSamples =
+            Math.floor(
+                grainSize *
+                sourceBuffer.sampleRate /
+                grainRatio
+            );
+
+        for (let ch = 0; ch < channels; ch++) {
+
+            const src =
+                input[ch];
+
+            const dst =
+                outputChannels[ch];
+
+            for (let j = 0; j < outSamples; j++) {
+
+                const normalized =
+                    j / outSamples;
+
+                const window =
+                    Math.sin(
+                        Math.PI * normalized
+                    );
+
+                const sourceIndex =
+                    sourceStart +
+                    Math.floor(
+                        normalized *
+                        grainSamples
+                    );
+
+                if (
+                    sourceIndex >= 0 &&
+                    sourceIndex < src.length
+                ) {
+
+                    const outIndex =
+                        position + j;
+
+                    if (outIndex < dst.length) {
+
+                        dst[outIndex] +=
+                            src[sourceIndex] *
+                            window *
+                            0.42;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        /*
+            Sometimes jump backwards.
+            This creates the "blurred memory"
+            effect instead of a conventional stretch.
+        */
+
+        const jump =
+            (
+                Math.random() <
+                reverseAmount / 100
+            )
+            ?
+            -Math.floor(
+                Math.random() *
+                sourceBuffer.sampleRate *
+                .8 * (.3 + jitter)
+            )
+            :
+            Math.floor(
+                grainSamples *
+                (.2 + Math.random() * 2 * (.4 + jitter))
+            );
+
+        sourcePosition += jump;
+
+        if (
+            sourcePosition < 0 ||
+            sourcePosition >= sourceBuffer.length
+        ) {
+            sourcePosition =
+                Math.floor(
+                    Math.random() *
+                    sourceBuffer.length
+                );
+        }
+
+        position +=
+            Math.floor(
+                hop * sourceBuffer.sampleRate
+            );
+
+    }
+
+    return output;
+}
+
+
+/*
+    SMEAR ENGINE
+    Many short overlapping copies of the source,
+    each shifted in time/pitch/volume, summed into
+    a long blurred mass.
+*/
+function createSmearLayer(context, sourceBuffer, amountPct, densityPct) {
+
+    if (amountPct <= 0) return null;
+
+    const channels = sourceBuffer.numberOfChannels;
+    const smearLen = 1 + amountPct / 100 * 6;
+    const taps = Math.floor(6 + densityPct / 100 * 40);
+    const outLen = Math.ceil((sourceBuffer.duration + smearLen) * context.sampleRate);
+    const output = context.createBuffer(channels, outLen, context.sampleRate);
+
+    for (let ch = 0; ch < channels; ch++) {
+        const src = sourceBuffer.getChannelData(ch);
+        const dst = output.getChannelData(ch);
+
+        for (let t = 0; t < taps; t++) {
+            const offsetSec = Math.random() * smearLen;
+            const offsetSamples = Math.floor(offsetSec * context.sampleRate);
+            const gain = (1 - t / taps) * .5 * (amountPct / 100);
+            const rate = 1 + (Math.random() * 2 - 1) * (amountPct / 100) * .1;
+
+            for (let i = 0; i < src.length; i++) {
+                const srcIdx = Math.floor(i * rate);
+                if (srcIdx >= src.length) break;
+                const outIdx = offsetSamples + i;
+                if (outIdx < dst.length) {
+                    dst[outIdx] += src[srcIdx] * gain;
+                }
+            }
+        }
+    }
+
+    return output;
+}
+
+/*
+    FREEZE ENGINE
+    Loops a short region of the source into a long
+    sustained drone-like texture.
+*/
+function createFreezeLayer(context, sourceBuffer, posPct, lengthSec) {
+
+    const channels = sourceBuffer.numberOfChannels;
+    const regionSamples = Math.floor(.4 * sourceBuffer.sampleRate);
+    const startSample = Math.floor(
+        (posPct / 100) * Math.max(1, sourceBuffer.length - regionSamples)
+    );
+
+    const outLen = Math.ceil(lengthSec * context.sampleRate);
+    const output = context.createBuffer(channels, outLen, context.sampleRate);
+
+    for (let ch = 0; ch < channels; ch++) {
+        const src = sourceBuffer.getChannelData(ch);
+        const dst = output.getChannelData(ch);
+        let pos = 0;
+
+        while (pos < outLen) {
+            for (let i = 0; i < regionSamples && pos < outLen; i++, pos++) {
+                const w = Math.sin(Math.PI * (i / regionSamples));
+                const idx = startSample + i;
+                if (idx < src.length) {
+                    dst[pos] += src[idx] * w * .8;
+                }
+            }
+        }
+    }
+
+    return output;
+}
+
+/*
+    MAIN PROCESSOR
+*/
+
+async function generate() {
+
+    if (!originalBuffer) {
+
+        $("status").textContent =
+            "load an audio file first";
+
+        return;
+
+    }
+
+    initAudio();
+
+    $("generate").disabled = true;
+
+    $("status").textContent =
+        "creating grains...";
+
+    /*
+        We create several versions.
+    */
+
+    const grainA =
+        createGrainLayer(
+            audioCtx,
+            originalBuffer,
+            params.stretch,
+            params.pitch,
+            params.reverse,
+            params.texture,
+            params.grainSize,
+            params.grainDensity,
+            params.grainJitter,
+            params.grainPitchRand
+        );
+
+    $("status").textContent =
+        "creating second texture layer...";
+
+    const grainB =
+        createGrainLayer(
+            audioCtx,
+            originalBuffer,
+            params.stretch * 1.17,
+            params.pitch - 7,
+            params.reverse + 15,
+            Math.min(100, params.texture + 15),
+            params.grainSize * .8,
+            params.grainDensity,
+            params.grainJitter,
+            params.grainPitchRand
+        );
+
+    /*
+        PITCH LAYERS
+        extra detuned grain layers, symmetric
+        around the base pitch.
+    */
+    const extraLayers = [];
+    if (params.pitchLayers > 1) {
+        $("status").textContent = "creating pitch layers...";
+        const n = params.pitchLayers - 1;
+        for (let i = 0; i < n; i++) {
+            const frac = n === 1 ? 1 : (i / (n - 1)) * 2 - 1;
+            const semis = params.pitch + frac * params.pitchSpread;
+            extraLayers.push(
+                createGrainLayer(
+                    audioCtx, originalBuffer, params.stretch, semis,
+                    params.reverse, params.texture,
+                    params.grainSize * 1.1, params.grainDensity,
+                    params.grainJitter, params.grainPitchRand
+                )
+            );
+        }
+    }
+
+    let smearBuf = null;
+    if (params.smear > 0) {
+        $("status").textContent = "smearing...";
+        smearBuf = createSmearLayer(audioCtx, originalBuffer, params.smear, params.smearDensity);
+    }
+
+    let freezeBuf = null;
+    if (freezeOn) {
+        $("status").textContent = "freezing...";
+        freezeBuf = createFreezeLayer(audioCtx, originalBuffer, params.freezePos, params.freezeLen);
+    }
+
+    $("status").textContent =
+        "creating ambient space...";
+
+    const duration =
+        Math.max(
+            grainA.duration,
+            grainB.duration,
+            smearBuf ? smearBuf.duration : 0,
+            freezeBuf ? freezeBuf.duration : 0,
+            ...extraLayers.map(b => b.duration)
+        ) + 3;
+
+    const offline =
+        new OfflineAudioContext(
+            2,
+            Math.ceil(duration * 44100),
+            44100
+        );
+
+    /*
+        MAIN GRAIN
+    */
+
+    const srcA =
+        offline.createBufferSource();
+
+    srcA.buffer = grainA;
+
+    const filterA =
+        offline.createBiquadFilter();
+
+    filterA.type = "lowpass";
+
+    filterA.frequency.value =
+        params.lowpass *
+        (1 - params.blur / 140);
+
+    filterA.Q.value =
+        0.2 +
+        params.blur / 50;
+
+    /*
+        SECOND GRAIN
+    */
+
+    const srcB =
+        offline.createBufferSource();
+
+    srcB.buffer = grainB;
+
+    srcB.detune.value =
+        -3 - params.blur / 10;
+
+    const filterB =
+        offline.createBiquadFilter();
+
+    filterB.type = "lowpass";
+
+    filterB.frequency.value =
+        Math.max(
+            250,
+            params.lowpass * .7
+        );
+
+
+    /*
+        DISTORTION
+    */
+
+    const distortion =
+        offline.createWaveShaper();
+
+    distortion.curve =
+        makeDistortionCurve(params.dist);
+
+    distortion.oversample = "4x";
+
+
+    /*
+        STEREO
+    */
+
+    const stereo =
+        offline.createStereoPanner();
+
+    stereo.pan.value = 0;
+
+
+    /*
+        REVERB
+    */
+
+    const convolver =
+        offline.createConvolver();
+
+    convolver.buffer =
+        createImpulse(
+            offline,
+            5 + params.reverb / 12,
+            .8 - params.reverb / 200
+        );
+
+
+    /*
+        DRY/WET REVERB
+    */
+
+    const dry =
+        offline.createGain();
+
+    dry.gain.value =
+        .12;
+
+    const wet =
+        offline.createGain();
+
+    wet.gain.value =
+        .35 +
+        params.reverb / 100;
+
+
+    /*
+        DELAY
+    */
+
+    const delay =
+        offline.createDelay(2);
+
+    delay.delayTime.value =
+        .18 +
+        params.delay / 100 * .55;
+
+    const feedback =
+        offline.createGain();
+
+    feedback.gain.value =
+        .15 +
+        params.delay / 100 * .35;
+
+
+    /*
+        STEREO WIDTH
+    */
+
+    const splitter =
+        offline.createChannelSplitter(2);
+
+    const merger =
+        offline.createChannelMerger(2);
+
+    const leftDelay =
+        offline.createDelay(.1);
+
+    const rightDelay =
+        offline.createDelay(.1);
+
+    leftDelay.delayTime.value =
+        params.stereo / 100 * .035;
+
+    rightDelay.delayTime.value =
+        params.stereo / 100 * .055;
+
+
+    /*
+        OUTPUT
+    */
+
+    const output =
+        offline.createGain();
+
+    output.gain.value = .8;
+
+
+    /*
+        CONNECTIONS
+    */
+
+    srcA.connect(filterA);
+    srcB.connect(filterB);
+
+    filterA.connect(distortion);
+    filterB.connect(distortion);
+
+    /*
+        extra pitch layers, smear and freeze
+        feed the same distortion/mix bus
+    */
+    const extraSources = extraLayers.map(buf => {
+        const s = offline.createBufferSource();
+        s.buffer = buf;
+        const g = offline.createGain();
+        g.gain.value = .6 / Math.max(1, extraLayers.length);
+        s.connect(g);
+        g.connect(distortion);
+        return s;
+    });
+
+    let smearSource = null;
+    if (smearBuf) {
+        smearSource = offline.createBufferSource();
+        smearSource.buffer = smearBuf;
+        const g = offline.createGain();
+        g.gain.value = .7;
+        smearSource.connect(g);
+        g.connect(distortion);
+    }
+
+    let freezeSource = null;
+    if (freezeBuf) {
+        freezeSource = offline.createBufferSource();
+        freezeSource.buffer = freezeBuf;
+        const g = offline.createGain();
+        g.gain.value = .8;
+        freezeSource.connect(g);
+        g.connect(convolver);
+        g.connect(dry);
+    }
+
+    distortion.connect(dry);
+    distortion.connect(convolver);
+    distortion.connect(delay);
+
+    dry.connect(output);
+
+    convolver.connect(wet);
+    wet.connect(output);
+
+    delay.connect(feedback);
+    feedback.connect(delay);
+
+    delay.connect(output);
+
+    /*
+        Additional stereo treatment
+    */
+
+    output.connect(splitter);
+
+    splitter.connect(leftDelay, 0);
+    splitter.connect(rightDelay, 1);
+
+    leftDelay.connect(merger, 0, 0);
+    rightDelay.connect(merger, 0, 1);
+
+    merger.connect(stereo);
+
+    stereo.connect(offline.destination);
+
+
+    /*
+        start layers with tiny offsets
+        to make a unified cloud.
+    */
+
+    srcA.start(0);
+
+    srcB.start(
+        Math.min(
+            .35,
+            grainA.duration / 10
+        )
+    );
+
+    extraSources.forEach(s => s.start(Math.random() * .4));
+    if (smearSource) smearSource.start(0);
+    if (freezeSource) freezeSource.start(0);
+
+    $("status").textContent =
+        "rendering — this can take a little while...";
+
+    resultBuffer =
+        await offline.startRendering();
+
+    $("status").textContent =
+        "done — ambient version generated";
+
+    $("download").disabled = false;
+
+    $("generate").disabled = false;
+
+    drawWave(resultBuffer);
+
+}
+
+
+/*
+    PLAYBACK
+*/
+
+function playBuffer(buffer) {
+
+    if (!buffer) return;
+
+    initAudio();
+
+    stopPlayback();
+
+    currentSource =
+        audioCtx.createBufferSource();
+
+    currentSource.buffer = buffer;
+
+    currentSource.connect(
+        audioCtx.destination
+    );
+
+    currentSource.start();
+
+}
+
+function stopPlayback() {
+
+    if (currentSource) {
+
+        try {
+            currentSource.stop();
+        } catch(e) {}
+
+        currentSource.disconnect();
+
+        currentSource = null;
+
+    }
+
+}
+
+$("playOriginal").onclick = () => {
+    playBuffer(originalBuffer);
+};
+
+$("playResult").onclick = () => {
+    playBuffer(resultBuffer);
+};
+
+$("stop").onclick = stopPlayback;
+
+
+/*
+    WAV EXPORT
+*/
+
+function bufferToWav(buffer) {
+
+    const channels =
+        buffer.numberOfChannels;
+
+    const sampleRate =
+        buffer.sampleRate;
+
+    const samples =
+        buffer.length;
+
+    const bytesPerSample = 2;
+
+    const blockAlign =
+        channels * bytesPerSample;
+
+    const dataSize =
+        samples *
+        blockAlign;
+
+    const arrayBuffer =
+        new ArrayBuffer(
+            44 + dataSize
+        );
+
+    const view =
+        new DataView(arrayBuffer);
+
+    function writeString(offset, string) {
+
+        for (
+            let i = 0;
+            i < string.length;
+            i++
+        ) {
+            view.setUint8(
+                offset + i,
+                string.charCodeAt(i)
+            );
+        }
+
+    }
+
+    writeString(0, "RIFF");
+
+    view.setUint32(
+        4,
+        36 + dataSize,
+        true
+    );
+
+    writeString(8, "WAVE");
+    writeString(12, "fmt ");
+
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, channels, true);
+    view.setUint32(24, sampleRate, true);
+
+    view.setUint32(
+        28,
+        sampleRate * blockAlign,
+        true
+    );
+
+    view.setUint16(
+        32,
+        blockAlign,
+        true
+    );
+
+    view.setUint16(
+        34,
+        16,
+        true
+    );
+
+    writeString(36, "data");
+
+    view.setUint32(
+        40,
+        dataSize,
+        true
+    );
+
+    let offset = 44;
+
+    /*
+        Interleave channels.
+    */
+
+    const channelData = [];
+
+    for (let ch = 0; ch < channels; ch++) {
+        channelData[ch] =
+            buffer.getChannelData(ch);
+    }
+
+    for (let i = 0; i < samples; i++) {
+
+        for (let ch = 0; ch < channels; ch++) {
+
+            let sample =
+                channelData[ch][i];
+
+            sample =
+                Math.max(
+                    -1,
+                    Math.min(1, sample)
+                );
+
+            const value =
+                sample < 0
+                ? sample * 32768
+                : sample * 32767;
+
+            view.setInt16(
+                offset,
+                value,
+                true
+            );
+
+            offset += 2;
+
+        }
+
+    }
+
+    return new Blob(
+        [arrayBuffer],
+        {type:"audio/wav"}
+    );
+
+}
+
+
+let downloadsCap = null;
+if (window.claude && window.claude.use) {
+    window.claude.use("downloads").then(cap => { downloadsCap = cap; }).catch(() => {});
+}
+
+$("download").onclick = async () => {
+
+    if (!resultBuffer) return;
+
+    const wav =
+        bufferToWav(resultBuffer);
+
+    if (downloadsCap) {
+
+        $("status").textContent = "saving...";
+
+        try {
+            const res = await downloadsCap.save({
+                filename: "ambient-blur.wav",
+                data: wav
+            });
+            $("status").textContent =
+                res.status === "saved" ? "saved" : "sent";
+        } catch (e) {
+            $("status").textContent =
+                "download declined or unavailable (" +
+                (e && e.code || "error") + ")";
+        }
+
+        return;
+
+    }
+
+    const url =
+        URL.createObjectURL(wav);
+
+    const a =
+        document.createElement("a");
+
+    a.href = url;
+    a.download =
+        "ambient-blur.wav";
+
+    a.click();
+
+    setTimeout(
+        () => URL.revokeObjectURL(url),
+        1000
+    );
+
+};
+
+
+/*
+    PRESETS
+*/
+
+const presets = {
+
+    ambient: {
+        blur: 72,
+        stretch: 4.5,
+        pitch: -5,
+        reverse: 35,
+        reverb: 95,
+        delay: 70,
+        stereo: 90,
+        dist: 5,
+        lowpass: 4200,
+        texture: 75
+    },
+
+    dream: {
+        blur: 85,
+        stretch: 5.5,
+        pitch: -8,
+        reverse: 45,
+        reverb: 100,
+        delay: 55,
+        stereo: 100,
+        dist: 2,
+        lowpass: 3500,
+        texture: 90
+    },
+
+    underwater: {
+        blur: 95,
+        stretch: 3.8,
+        pitch: -12,
+        reverse: 20,
+        reverb: 100,
+        delay: 80,
+        stereo: 80,
+        dist: 0,
+        lowpass: 1300,
+        texture: 65
+    },
+
+    void: {
+        blur: 100,
+        stretch: 7,
+        pitch: -18,
+        reverse: 75,
+        reverb: 100,
+        delay: 95,
+        stereo: 100,
+        dist: 12,
+        lowpass: 2200,
+        texture: 100
+    },
+
+    destroy: {
+        blur: 65,
+        stretch: 6,
+        pitch: -24,
+        reverse: 80,
+        reverb: 80,
+        delay: 100,
+        stereo: 100,
+        dist: 45,
+        lowpass: 5000,
+        texture: 100
+    },
+
+    ethereal: {
+        blur: 92,
+        stretch: 8,
+        pitch: 7,
+        reverse: 60,
+        reverb: 100,
+        delay: 65,
+        stereo: 100,
+        dist: 1,
+        lowpass: 6000,
+        texture: 95,
+        smear: 45, pitchLayers: 3, pitchSpread: 7
+    },
+
+    ghost: {
+        blur: 88, stretch: 6, pitch: -3, reverse: 55, reverb: 100,
+        delay: 60, stereo: 100, dist: 2, lowpass: 3200, texture: 80,
+        grainSize: 120, grainDensity: 30, grainJitter: 70,
+        smear: 70, smearDensity: 60, pitchLayers: 4, pitchSpread: 5
+    },
+
+    frozen: {
+        blur: 60, stretch: 4, pitch: -2, reverse: 20, reverb: 95,
+        delay: 40, stereo: 90, dist: 0, lowpass: 5000, texture: 60,
+        smear: 20, pitchLayers: 2, pitchSpread: 3,
+        freezePos: 25, freezeLen: 25
+    },
+
+    digitalrain: {
+        blur: 55, stretch: 3, pitch: 3, reverse: 50, reverb: 70,
+        delay: 85, stereo: 100, dist: 25, lowpass: 9000, texture: 100,
+        grainSize: 25, grainDensity: 90, grainJitter: 90,
+        grainPitchRand: 40, smear: 30, pitchLayers: 1
+    },
+
+    reset: {
+        blur: 70,
+        stretch: 4,
+        pitch: -5,
+        reverse: 35,
+        reverb: 90,
+        delay: 70,
+        stereo: 85,
+        dist: 8,
+        lowpass: 4200,
+        texture: 75,
+        grainSize: 60, grainDensity: 50, grainJitter: 40, grainPitchRand: 15,
+        smear: 0, smearDensity: 50, pitchLayers: 1, pitchSpread: 7,
+        freezePos: 30, freezeLen: 12
+    }
+
+};
+
+document
+.querySelectorAll("[data-preset]")
+.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        const preset =
+            presets[
+                button.dataset.preset
+            ];
+
+        Object.keys(preset).forEach(key => {
+
+            params[key] =
+                preset[key];
+
+            $(key).value =
+                preset[key];
+
+        });
+
+        updateLabels();
+
+    });
+
+});
+
+
+/*
+    FREEZE TOGGLE
+*/
+$("freezeToggle").onclick = () => {
+    freezeOn = !freezeOn;
+    $("freezeToggle").textContent = "FREEZE: " + (freezeOn ? "ON" : "OFF");
+    $("freezeToggle").classList.toggle("primary", freezeOn);
+};
+
+/*
+    MUTATE
+    randomly perturbs every parameter within
+    musical bounds, scaled by MUTATION AMOUNT.
+*/
+const paramRanges = {
+    blur: [0, 100], stretch: [1, 8], pitch: [-24, 24], reverse: [0, 100],
+    reverb: [0, 100], delay: [0, 100], stereo: [0, 100], dist: [0, 100],
+    lowpass: [300, 18000], texture: [0, 100], grainSize: [15, 300],
+    grainDensity: [5, 100], grainJitter: [0, 100], grainPitchRand: [0, 100],
+    smear: [0, 100], smearDensity: [10, 100], pitchLayers: [1, 5],
+    pitchSpread: [1, 12], freezePos: [0, 100], freezeLen: [4, 40]
+};
+
+$("mutateBtn").onclick = () => {
+    const amt = params.mutateAmt / 100;
+
+    Object.keys(paramRanges).forEach(key => {
+        const [min, max] = paramRanges[key];
+        const range = max - min;
+        const delta = (Math.random() * 2 - 1) * range * amt * .5;
+        let v = params[key] + delta;
+        v = Math.max(min, Math.min(max, v));
+        v = (key === "stretch" || key === "pitchSpread") ? Math.round(v * 10) / 10 : Math.round(v);
+        params[key] = v;
+        $(key).value = v;
+    });
+
+    updateLabels();
+    $("status").textContent = "mutated — press GENERATE to hear it";
+};
+
+window.addEventListener("resize", () => {
+
+    if (originalBuffer) {
+        drawWave(
+            resultBuffer ||
+            originalBuffer
+        );
+    }
+
+});
+
+</script>
+
+</body>
+</html>
