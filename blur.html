@@ -560,7 +560,10 @@ fileInput.addEventListener("change", e => {
 
 });
 
-drop.addEventListener("click", () => fileInput.click());
+drop.addEventListener("click", e => {
+    if (e.target === fileInput) return;
+    fileInput.click();
+});
 
 drop.addEventListener("dragover", e => {
     e.preventDefault();
