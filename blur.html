@@ -554,16 +554,18 @@ updateLabels();
 
 fileInput.addEventListener("change", e => {
 
-    if (e.target.files[0]) {
-        loadFile(e.target.files[0]);
+    const file = e.target.files && e.target.files[0];
+
+    if (file) {
+        loadFile(file);
     }
 
+    e.target.value = "";
+
 });
 
-drop.addEventListener("click", e => {
-    if (e.target === fileInput) return;
-    fileInput.click();
-});
+/* the <label> already opens the wrapped, hidden
+   file input natively on click/tap — no JS needed here */
 
 drop.addEventListener("dragover", e => {
     e.preventDefault();
